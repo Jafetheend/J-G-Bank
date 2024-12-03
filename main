@@ -1,0 +1,385 @@
+#include <iostream>
+#include <string>
+#include <map>
+#include <vector>
+#include <limits>
+#include <iomanip>
+#include <unordered_map>
+#include <sstream>
+using namespace std;
+
+class User
+{
+
+private:
+  string firstname;
+  string lastname;
+  string username;
+  string password;
+  string phonenumber;
+  double bankbalance;
+  int bankaccount;
+  static int nextbankaccount;
+  vector<string> transactionhistory;
+
+public:
+  User() : firstname(""), lastname(""), username(""), password(""), bankbalance(0.0), bankaccount(nextbankaccount++) {}
+
+  User(string fname, string lname, string usename, string pwd, string phone) : firstname(fname), lastname(lname), username(usename), password(pwd), bankbalance(0.0), phonenumber(phone)
+  {
+    bankaccount = nextbankaccount;
+    nextbankaccount++;
+  }
+
+  string getpassword() const
+  {
+    return password;
+  }
+
+  string getfirstname() const
+  {
+    return firstname;
+  }
+
+  string getlasttname() const
+  {
+    return lastname;
+  }
+
+  string getphonenumber() const
+  {
+    return phonenumber;
+  }
+
+  double getbalance()
+  {
+    return bankbalance;
+  }
+
+  int getbankaccountnumber() const
+  {
+    return bankaccount;
+  }
+
+  void deposit(double amount)
+  {
+    ostringstream oss;
+    oss << fixed << setprecision(2) << amount;
+    bankbalance += amount;
+    transactionhistory.push_back("Deposited: $" + oss.str());
+  }
+
+  void moneyrecieved(double amount)
+  {
+    ostringstream oss;
+    oss << fixed << setprecision(2) << amount;
+    bankbalance += amount;
+    transactionhistory.push_back("Money Recieved: $" + oss.str());
+  }
+
+  void withdraw(double amount)
+  {
+    ostringstream oss;
+    oss << fixed << setprecision(2) << amount;
+    bankbalance -= amount;
+    transactionhistory.push_back("Withdrew: $" + oss.str());
+  }
+
+  void moneysent(double amount)
+  {
+    ostringstream oss;
+    oss << fixed << setprecision(2) << amount;
+    bankbalance -= amount;
+    transactionhistory.push_back("Money Sent: $" + oss.str());
+  }
+
+  void displayhistory()
+  {
+    reverse(transactionhistory.begin(), transactionhistory.end());
+    for (const auto &history : transactionhistory)
+    {
+      cout << history << endl;
+    }
+  }
+
+  void displayinfo()
+  {
+    cout << "Name: " << firstname << " " << lastname << endl;
+    cout << "Bank Account Number: " << bankaccount << endl;
+    cout << "Phone Number: " << phonenumber << endl;
+    cout << "Balance: $" << bankbalance << endl;
+  }
+};
+
+int User::nextbankaccount = 10000;
+
+void showmenu()
+{
+  cout << "Welcome to J.G Bank\n";
+  cout << "1. Log In\n";
+  cout << "2. Sign Up\n";
+  cout << "3. Delete Account\n";
+  cout << "4. Exit\n";
+  cout << "Please make a selection: ";
+}
+
+void usermenu()
+{
+  cout << "Welcome to J.G Bank\n";
+  cout << "1. Check Account details\n";
+  cout << "2. Deposit\n";
+  cout << "3. Withdraw\n";
+  cout << "4. Send Money\n";
+  cout << "5. Log Out\n";
+  cout << "Please make a selection: ";
+}
+
+int main()
+{
+
+  int selection;
+  int accountnumber;
+  double amount;
+  string firstname;
+  string lastname;
+  string username;
+  string password;
+  string phonenumber;
+  unordered_map<string, User> userinfo;
+
+  do
+  {
+    showmenu();
+    cin >> selection;
+    if (cin.fail())
+    {
+      cin.clear();
+      cin.ignore(numeric_limits<streamsize>::max(), '\n');
+      cout << "Invalid input. Please enter a number." << endl;
+      continue;
+    }
+    switch (selection)
+    {
+
+    case 1:
+    {
+      cout << endl;
+      cout << "Log In\n";
+      cout << "Enter Username: ";
+      cin >> username;
+      cout << "Enter Password: ";
+      cin >> password;
+      auto it = userinfo.find(username);
+      if (it != userinfo.end())
+      {
+        if (it->second.getpassword() == password)
+        {
+          cout << "Login Successful!" << endl
+               << endl;
+          int userselection;
+          do
+          {
+            usermenu();
+            cin >> userselection;
+            if (cin.fail())
+            {
+              cin.clear();
+              cin.ignore(numeric_limits<streamsize>::max(), '\n');
+              cout << "Invalid input. Please enter a number." << endl;
+              continue;
+            }
+            switch (userselection)
+            {
+            case 1:
+            {
+              cout << endl;
+              it->second.displayinfo();
+              it->second.displayhistory();
+              cout << endl;
+              break;
+            }
+            case 2:
+            {
+              cout << endl;
+              cout << "Deposit\n";
+              cout << "Enter amount to deposit: $";
+              cin >> amount;
+              if (amount > 0)
+              {
+                it->second.deposit(amount);
+                cout << "New Balance: $" << it->second.getbalance();
+                cout << endl
+                     << endl;
+              }
+              else
+              {
+                cout << "Amount should be positive.\n\n";
+              }
+              break;
+            }
+            case 3:
+            {
+              cout << endl;
+              cout << "Withdraw\n";
+              cout << "Enter amount to withdraw: $";
+              cin >> amount;
+              if (amount > 0 && amount <= it->second.getbalance())
+              {
+                it->second.withdraw(amount);
+                cout << "New Balance: $" << it->second.getbalance();
+                cout << endl
+                     << endl;
+              }
+              else
+              {
+                cout << "Insufficent Funds OR Amount Requested is Negative\n\n";
+              }
+              break;
+            }
+            case 4:
+            {
+              cout << endl;
+              cout << "Send Money\n";
+              cout << "Enter The Phone Number Of The Account You Want To Send: ";
+              cin >> phonenumber;
+              User *recipient = nullptr;
+              for (auto &pair : userinfo)
+              {
+                User &user = pair.second;
+                if (user.getphonenumber() == phonenumber)
+                {
+                  recipient = &user;
+                  break;
+                }
+              }
+
+              if (recipient == nullptr)
+              {
+                cout << "No Account Found With This Phone Number.\n\n";
+                break;
+              }
+              double amounttosend;
+              cout << "Enter The Amount Of Money You Want To Send: $";
+              cin >> amounttosend;
+
+              if (amounttosend < 0)
+              {
+                cout << "Amount Should Be Positive.\n\n";
+              }
+              else if (amounttosend > it->second.getbalance())
+              {
+                cout << "Insufficient Funds In Balance.\n";
+                cout << "Current Balance is: $" << it->second.getbalance() << endl
+                     << endl;
+              }
+              else
+              {
+                it->second.moneysent(amounttosend);
+                recipient->moneyrecieved(amounttosend);
+                cout << phonenumber << " received $" << amounttosend << " That you sent.\n\n";
+              }
+
+              break;
+            }
+            case 5:
+            {
+              cout << endl;
+              cout << "Logging out...";
+              cout << endl
+                   << endl;
+              break;
+            }
+            default:
+            {
+              cout << "INCORRET INPUT ENTERED. TRY AGAIN.\n";
+            }
+            }
+          } while (userselection != 5);
+        }
+        else
+        {
+          cout << "Username or Password is incorrect.\n\n";
+        }
+      }
+      else
+      {
+        cout << "Username or Password is incorrect.\n\n";
+      }
+
+      break;
+    }
+    case 2:
+    {
+      cout << endl;
+      cout << "Sign Up\n";
+      cout << "Enter First Name: ";
+      cin >> firstname;
+      cout << "Enter Last Name: ";
+      cin >> lastname;
+      cout << "Enter Phone Number: ";
+      cin >> phonenumber;
+      cout << "Enter Username: ";
+      cin >> username;
+      cout << "Enter Password: ";
+      cin >> password;
+
+      if (userinfo.find(username) == userinfo.end())
+      {
+        User newuser(firstname, lastname, username, password, phonenumber);
+        userinfo[username] = newuser;
+        cout << "Account created\n";
+        cout << "Welcome to the J.G Family\n";
+        cout << endl;
+      }
+      else
+      {
+        cout << "Username already in use try another one\n\n";
+      }
+      break;
+    }
+    case 3:
+    {
+      cout << endl;
+      cout << "Delete Account\n";
+      cin.clear();
+      cin.ignore(numeric_limits<streamsize>::max(), '\n');
+      cout << "Enter Username: ";
+      cin >> username;
+      cout << "Enter Password: ";
+      cin >> password;
+      cout << "Enter Account Number: ";
+      cin >> accountnumber;
+      auto it = userinfo.find(username);
+      if (it != userinfo.end())
+      {
+        if (it->second.getpassword() == password && it->second.getbankaccountnumber() == accountnumber)
+        {
+          userinfo.erase(username);
+          cout << "Account Deleted\n";
+          cout << "See You Soon\n\n";
+        }
+        else
+        {
+          cout << "Account Was Not Deleted\n";
+          cout << "Password Or Account Number Incorrect\n\n";
+        }
+      }
+      else
+      {
+        cout << "Username Was Not Found\n\n";
+      }
+      cin.ignore(numeric_limits<streamsize>::max(), '\n');
+      break;
+    }
+    case 4:
+    {
+      cout << "Exiting...";
+      break;
+    }
+    default:
+    {
+      cout << "Incorrect input entered" << endl;
+    }
+    }
+  } while (selection != 4);
+}
