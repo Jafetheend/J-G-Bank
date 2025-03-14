@@ -7,3 +7,5 @@ A simple banking system built with C++.
 - Check balance, deposit, withdraw money
 - Transfer funds to another user
 - See recent transactions
+
+Used replit to write C++ code
